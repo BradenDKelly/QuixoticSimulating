@@ -19,7 +19,7 @@ This is my playground which will be used for testing new ideas and algorithms. A
   5) add ability to do adsorption
 
   # Proof of concept
-  Here are some mediocre images from short runs to show it works :)
+  Here are some mediocre images from short runs to show it works :) It takes approximately 1 hour to do 10 million (translation + rotation) steps for 1000 SPC/E water molecules.
 ![](docs/images/SPCE_W_E_.png)
 
 ![](docs/images/spce_box.png)
