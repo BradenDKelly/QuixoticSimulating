@@ -13,7 +13,7 @@ using Dates
 using Profile
 
 
-include("tests.jl")
+#include("tests.jl")
 include("auxillary.jl")
 include("initialConfigurations.jl")
 include("boundaries.jl")
@@ -26,7 +26,6 @@ include("banners.jl")
 include("adjust.jl")
 include("setup.jl")
 include("structs.jl")
-
 
 function PrintLine(s::String, n::Int64) # handy tool for outputting lines
     println(repeat(s, n)) # prints n copies of whatever s is.
@@ -153,8 +152,8 @@ if lowercase(initialConfiguration) == "crystal"
     moleculeList = []
     bodyFixed = []
 
-    top_file = "water.top"
-    specieList = ["tip3p.pdb"]  # "mea.pdb",
+    top_file = joinpath( pwd(), "QuixoticSimulating", "src", "topology_files","water.top")
+    specieList = [joinpath(pwd(), "QuixoticSimulating", "src", "topology_files","tip3p.pdb")]  # "mea.pdb",
     @time systemTop = ReadTopFile(top_file) # returns struct FFParameters # located in Setup.jl
 
     for i in eachindex(specieList)
