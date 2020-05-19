@@ -1,8 +1,8 @@
 # QuixoticSimulating
 
-[![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://BradenDKelly.github.io/QuixoticSimulating.jl/stable)
-[![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://BradenDKelly.github.io/QuixoticSimulating.jl/dev)
-[![Codecov](https://codecov.io/gh/BradenDKelly/QuixoticSimulating.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/BradenDKelly/QuixoticSimulating.jl)
+[![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://BradenDKelly.github.io/QuixoticSimulating/stable)
+[![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://BradenDKelly.github.io/QuixoticSimulating/dev)
+[![Codecov](https://codecov.io/gh/BradenDKelly/QuixoticSimulating/branch/master/graph/badge.svg)](https://codecov.io/gh/BradenDKelly/QuixoticSimulating)
 
 # Metropolis Monte Carlo
 
@@ -17,7 +17,7 @@ This is my playground which will be used for testing new ideas and algorithms. A
   3) add free energy calculations
   4) add GPU support
   5) add ability to do adsorption
-  
+
   # Proof of concept
   Here are some mediocre images from short runs to show it works :)
 ![](docs/images/SPCE_W_E_.png)
