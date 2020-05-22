@@ -3,6 +3,7 @@
 [![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://BradenDKelly.github.io/QuixoticSimulating/stable)
 [![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://BradenDKelly.github.io/QuixoticSimulating/dev)
 [![Codecov](https://codecov.io/gh/BradenDKelly/QuixoticSimulating/branch/master/graph/badge.svg)](https://codecov.io/gh/BradenDKelly/QuixoticSimulating)
+![CI](https://github.com/BradenDKelly/QuixoticSimulating/workflows/CI/badge.svg)
 
 # Metropolis Monte Carlo
 
