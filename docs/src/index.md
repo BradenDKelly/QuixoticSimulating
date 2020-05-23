@@ -1,4 +1,4 @@
-# QuixoticSimulating.jl
+# QuixoticSimulating
 
 ```@index
 ```
