@@ -1,9 +1,9 @@
 
-function Logo()
+function Logo(code_version)
 
     PrintLine("=", 70)
     println("                                                                  ")
-    println("                   Code Version: Development (0.0)                ")
+    println("                   Code Version: Development ($code_version)                ")
     println("                      Julia version 1.4.0                         ")
     println("                     Written by Braden Kelly                      ")
     println("                          May, 2020                             ")
@@ -21,11 +21,11 @@ function Logo()
 
 end
 
-function Completion()
+function Completion(code_version)
 
     PrintLine("=", 70)
     println("                                                                  ")
-    println("                   Code Version: Development (-1.0)               ")
+    println("                   Code Version: Development ($code_version)               ")
     println("                      Julia version 1.4.0                         ")
     println("                     Written by Braden Kelly                      ")
     println("                          April, 2020                             ")

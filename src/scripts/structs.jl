@@ -191,6 +191,7 @@ Dihedrals(ai::Int64,aj::Int64,ak::Int64,al::Int64,funct::Int64,
 Dihedrals(ai::Int64,aj::Int64,ak::Int64,al::Int64,funct::Int64, phase::Float64,
         kd::Float64,pn::Int64) = Dihedrals(ai,aj,ak,al,funct,Proper(phase,kd,pn))
 
+"""Struct holding molecular parameters for atoms/bonds/angles/dihedrals"""
 struct MolParam <: ForceField
     name::AbstractString
     nrexcl::Int64
@@ -201,6 +202,7 @@ struct MolParam <: ForceField
     #MolParam() = new()           # avoids needing to instantiate all variables initially
 end
 
+"""Struct holding all force-field parameters such as atom types, FF etc."""
 struct FFParameters <: Gromacs
     defaults::Defaults # contains mixing rule, fudge factors
     atomTypes::Vector{Atomtypes} # one for each atom type
@@ -214,12 +216,14 @@ mutable struct XYZ <: FieldVector{3, Float64}
     @xyz
 end
 
+"""Struct holding molecule type specific information for rotations"""
 struct BodyFixed{T}
     r::Vector{SVector{3,T}}
     mass::Vector{T}
     atype::Vector{Int64}
 end
 
+"""Function for generating body_fixed coordinates of each molecule"""
 function BodyFixed(m,systemTop)
     # input: struct of type Topology (moleculeList)
     # output: struct of type BodyFixed
@@ -256,6 +260,7 @@ struct Topology
     #conect::Vector{Tuples}
 end
 
+"""Struct for MD with information for 1 atom"""
 struct PerAtomStruct <: AtomInfo
     atomID::String
     atomType::Int64
@@ -269,6 +274,7 @@ struct PerAtomStruct <: AtomInfo
     #Neighborlist::Vector{Int64}   # indices of neighbors
 end
 
+"""Molecular dynamics struct for positions, velocity, forces etc."""
 struct ParticleAtom{T,P} <: TypeStructArray
     r::SVector{3,T}
     v::SVector{3,T}
@@ -279,7 +285,7 @@ struct ParticleAtom{T,P} <: TypeStructArray
     qq::T
 end
 
-"""Atomic properties like number, mass, coords, charge, molecule_parent"""
+"""Monte Carlo Atomic properties like number, mass, coords, charge, molecule_parent"""
 struct ParticleAtomKMC <: TypeStructArray
     molNum::Int64
     molType::Int64
@@ -289,12 +295,14 @@ struct ParticleAtomKMC <: TypeStructArray
     charge::Float64
 end
 
+"""Struct with intramolecular parameters for bonds/angles/dihedrals"""
 struct IntraForceField <: ForceField
     bonds::Vector{Bonds}          # Int64 Int64 bondtype
     angles::Vector{Angles}        # Int64 Int64 Int64 angletype
     dihedrals::Vector{Dihedrals}  # Int64 Int64 Int64 Int64 dihedraltype
 end
 
+"""Table with LJ FF parameters, not in use atm"""
 struct Tables2 <: ForceField
     ϵij::Array{Float64,2}
     σij::Array{Float64,2}
@@ -302,6 +310,7 @@ struct Tables2 <: ForceField
     Tables2(ϵij=zeros(2,2), σij=zeros(2,2),αij=zeros(2,2)) = new(ϵij, σij,αij)
 end
 
+""" Struct with PVT properties for the total system"""
 mutable struct Properties22{F}
     volume::F
     temperature::F
@@ -311,6 +320,7 @@ mutable struct Properties22{F}
     PE::F
 end
 
+"""Struct with atomic and orientational parameters for molecules"""
 struct Molecule
     firstAtom::Int64
     lastAtom::Int64
@@ -320,11 +330,13 @@ struct Molecule
     molType::Int64
 end
 
+"""Struct for KMC for numerical overflow limits"""
 struct OverFlowTable{T}
     vdw::Array{T,2}
     qq::Array{T,2}
 end
 
+"""Struct for holding integer total quantities of atoms/molecules/charges etc."""
 struct Numbers{I}
     atoms::I
     molecules::I

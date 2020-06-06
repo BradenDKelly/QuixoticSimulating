@@ -31,14 +31,16 @@ function PrintLine(s::String, n::Int64) # handy tool for outputting lines
     println(repeat(s, n)) # prints n copies of whatever s is.
 end
 
-Logo()
+code_version = 0.1
+Logo(code_version)
 #Random.seed!(11234)
 start = Dates.now()
 println(Dates.now())
 
 ################################################################################
-# TODO (BDK) Add in setup.jl and structs.jl
-# TODO (BDK) Make initial configuration generation w/ Topology struct
+# TODO (BDK) Add in setup.jl and structs.jl (done ✔)
+# TODO (BDK) implement orientational bias -> useful for solutes
+# TODO (BDK) Make initial configuration generation w/ Topology struct (done ✔)
 # TODO (BDK) Implement pressure /w ewalds and wolf summation
 # TODO (BDK) Make functions in place so no temp arrays are generated
 # TODO (BDK) make input density in kg/m3 and convert
@@ -57,6 +59,7 @@ println(Dates.now())
 # TODO (BDK) Add configurational bias
 # TODO (BDK) Add alchemical free energy perturbation
 # TODO (BDK) Make simulation structs for object-oriented scripting
+# TODO (BDK) Add in a visualization module.
 ################################################################################
 temperature = 298.15 #0.6 #0.8772  # 1.2996
 ρ = 0.033101144   #0.015047707 #0.003633451 #0.00375000533 0.015047712
@@ -152,8 +155,11 @@ if lowercase(initialConfiguration) == "crystal"
     moleculeList = []
     bodyFixed = []
 
-    top_file = joinpath( pwd(), "QuixoticSimulating", "src", "topology_files","water.top")
-    specieList = [joinpath(pwd(), "QuixoticSimulating", "src", "topology_files","tip3p.pdb")]  # "mea.pdb",
+    top_file = joinpath( pwd(),  "src", "topology_files","water.top")
+    specieList = [joinpath(pwd(),  "src", "topology_files","tip3p.pdb")]  # "mea.pdb",
+    push!(warnings,"Paths seem to be different in linux and windows. Windows includes QuixoticSimulating in pwd()")
+    println("Path to topology files is $top_file")
+    println("Path to fixed body coordinates for each species is $top_file")
     @time systemTop = ReadTopFile(top_file) # returns struct FFParameters # located in Setup.jl
 
     for i in eachindex(specieList)
@@ -676,43 +682,9 @@ function Loop(
             4.60453 + total.virial / box / box / box
         )
         println(line)
-
-        #println("box: ", box, "  density: ", ρ)
-        #=
-        PrintOutput(
-            system,
-            totProps,
-            atomType,
-            atomName,
-            qq_r,
-            qq_q,
-            box,
-            blk,
-            "xyz_quat",
-        )
-        =#
     end # blk to nblock
 end
-#=
-Loop(
-    system,
-    totProps,
-    ovr_count,
-    box,
-    temperature,
-    total,
-    trans_moves,
-    rot_moves,
-    qq_q,
-    qq_r,
-    ewald,
-    averages,
-    ρ,
-    atomName,
-    atomType,
-    coulombStyle,
-)
-=#
+
 Loop(
     soa,
     moa,
@@ -762,7 +734,7 @@ println(
     Dates.canonicalize(Dates.CompoundPeriod(difference)),
 )
 
-Completion()
+Completion(code_version)
 
 #=
 println(
