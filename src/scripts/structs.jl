@@ -28,6 +28,81 @@ end
   z::Float64
 end
 
+"""Struct for FF parameters (currently LJ and EXP6) """
+mutable struct Tables #{T<:Vector} #<: ForceField
+    # passed two 1D arrays, convert them both to 2D matrices and
+    # apply geometric and arithmetic mixing rules
+    ϵᵢⱼ::Array{Float64,2}
+    σᵢⱼ::Array{Float64,2}
+    function Tables(a::Vector{T}, b::Vector{T}) where {T}
+        e = [sqrt(a[i] * a[j]) for i = 1:length(a), j = 1:length(a)]
+        s = [(b[i] + b[j]) / 2 for i = 1:length(b), j = 1:length(b)]
+        new(e, s)
+    end
+end
+
+"""Struct with energies, old and new, short and long"""
+mutable struct Properties
+    energy::Float64
+    virial::Float64
+    lj_virial::Float64
+    real_virial::Float64
+    recip_virial::Float64
+    self_virial::Float64
+    intra_virial::Float64
+    coulomb::Float64
+    recip::Float64
+    recipOld::Float64
+    old_e::Float64
+    old_v::Float64
+end
+
+"""Struct for tracking and optimizing translation moves"""
+mutable struct Moves
+    naccepp::Int           # previous number of attempts
+    naccept::Int           # current number of attempts
+    attempp::Int
+    attempt::Int
+    set_value::Float64     # desired success rate
+    d_max::Float64
+end
+
+"""structure for energy calculation properties """
+
+mutable struct Requirements
+    rm::Vector{SVector{3,Float64}}
+    ra::Vector{SVector{3,Float64}}
+    nMols::Int
+    nAtoms::Int
+    nCharges::Int
+    thisMol_theseAtoms::Vector{SVector{2,Int64}}
+    molNames::Vector     # strings
+    molTypes::Vector     # integers
+    atomNames::Vector    # strings
+    atomTypes::Vector    # integers
+    #ϵ::Array{Float64,2}
+    #σ::Array{Float64,2}
+    table::Tables
+    box::Float64
+    r_cut::Float64
+end
+
+""" structure for generic simulation properties"""
+mutable struct Properties2
+    temperature::Float64
+    ρ::Float64
+    pressure::Float64
+    dr_max::Float64
+    dϕ_max::Float64
+    move_accept::Float64
+    numTranAccepted::Int
+    totalStepsTaken::Int
+    quat::Vector{SVector{4,Float64}}
+    LJ_rcut::Float64
+    qq_rcut::Float64
+    box::Float64
+end
+
 #include("constraints.jl")
 abstract type ForceField end
 abstract type Gromacs <: ForceField end
@@ -302,13 +377,6 @@ struct IntraForceField <: ForceField
     dihedrals::Vector{Dihedrals}  # Int64 Int64 Int64 Int64 dihedraltype
 end
 
-"""Table with LJ FF parameters, not in use atm"""
-struct Tables2 <: ForceField
-    ϵij::Array{Float64,2}
-    σij::Array{Float64,2}
-    αij::Array{Float64,2}
-    Tables2(ϵij=zeros(2,2), σij=zeros(2,2),αij=zeros(2,2)) = new(ϵij, σij,αij)
-end
 
 """ Struct with PVT properties for the total system"""
 mutable struct Properties22{F}
@@ -343,19 +411,6 @@ struct Numbers{I}
     atomTypes::I
     molTypes::I
     charges::I
-end
-
-"""Struct for FF parameters (currently LJ and EXP6) """
-mutable struct Tables #{T<:Vector} #<: ForceField
-    # passed two 1D arrays, convert them both to 2D matrices and
-    # apply geometric and arithmetic mixing rules
-    ϵᵢⱼ::Array{Float64,2}
-    σᵢⱼ::Array{Float64,2}
-    function Tables(a::Vector{T}, b::Vector{T}) where {T}
-        e = [sqrt(a[i] * a[j]) for i = 1:length(a), j = 1:length(a)]
-        s = [(b[i] + b[j]) / 2 for i = 1:length(b), j = 1:length(b)]
-        new(e, s)
-    end
 end
 
 """

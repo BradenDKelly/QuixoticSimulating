@@ -26,6 +26,7 @@ include("banners.jl")
 include("adjust.jl")
 include("setup.jl")
 include("structs.jl")
+include("pressure.jl")
 
 function PrintLine(s::String, n::Int64) # handy tool for outputting lines
     println(repeat(s, n)) # prints n copies of whatever s is.
@@ -154,8 +155,8 @@ if lowercase(initialConfiguration) == "crystal"
 
     moleculeList = []
     bodyFixed = []
-
-    top_file = joinpath( pwd(),  "src", "topology_files","water.top")
+    top_file_path = joinpath( pwd(),  "src", "topology_files","water.top")
+    top_file = top_file_path
     specieList = [joinpath(pwd(),  "src", "topology_files","tip3p.pdb")]  # "mea.pdb",
     push!(warnings,"Paths seem to be different in linux and windows. Windows includes QuixoticSimulating in pwd()")
     println("Path to topology files is $top_file")
@@ -193,93 +194,6 @@ vdwTable.σᵢⱼ *= 10.0 # convert to Å from nm
 # this stucture holds information on the number of atoms, molecules, atom types, molecule types, charges
 numbers = Numbers(length(soa), length(moa), num_atom_types, length(systemTop.molParams), count(!iszero, soa.charge) )
 
-elseif occursin(lowercase(initialConfiguration), "cnf") #"cnf"  lowercase(initialConfiguration)
-    rm, quat, box = ReadCNF("cnf_input.inp")
-    nMol = length(rm)
-    nAtoms = nMol * 3
-    ρ = nMol / (box^3)
-    println(" Initial configuration is from file: cnf_input.inp")
-    println("boxsize is: ", box)
-    println("density is: ", ρ)
-
-    """
-    A&T use a box centered at [0,0,0] whereas we use a box from 0->box in all
-    dimensions. This next part shift all coordinates by the magnitude of the
-    smallest coordinate so all coordinates are not between 0->box
-    """
-    xl = yl = zl = 0.0
-    for (i, mol) in enumerate(rm)
-        global xl, yl, zl
-        if i == 1
-            xl = mol[1]
-            yl = mol[2]
-            zl = mol[3]
-        else
-            if mol[1] < xl
-                xl = mol[1]
-            end
-            if mol[2] < yl
-                yl = mol[2]
-            end
-            if mol[3] < zl
-                zl = mol[3]
-            end
-        end
-    end
-    xl = abs(xl)
-    yl = abs(yl)
-    zl = abs(zl)
-    for (i, mol) in enumerate(rm)
-        rm[i] = mol .+ [xl, yl, zl]
-    end
-
-elseif occursin(lowercase(initialConfiguration), "nist")
-    # THis file stores a single configuration of 100-750 SPC/E water molecules.
-    # This is for testing only. NIST has results for energy contributions.
-    # load the configuration, get the atom types, charges, coordinates.
-    # Return to here and test.
-    filename = "spce_sample_config_periodic1.txt"
-    filename = "coord750.txt"
-    qq_r, qq_q, rm, ra, atomTracker, box, atomName, atomType =
-        ReadNIST(filename)
-
-    # make LJ table of values.
-    σ_O = 0.316555789 * 10.0 # convert nm to Å
-    σ_H = 0.0 # nm
-    ϵ_O = 78.1974311 # K   (ϵ/kᵦ)
-    ϵ_H = 0.0 # K   (ϵ/kᵦ)
-
-    xl = yl = zl = 0.0
-    for (i, mol) in enumerate(rm)
-        global xl, yl, zl
-        if i == 1
-            xl = mol[1]
-            yl = mol[2]
-            zl = mol[3]
-        else
-            if mol[1] < xl
-                xl = mol[1]
-            end
-            if mol[2] < yl
-                yl = mol[2]
-            end
-            if mol[3] < zl
-                zl = mol[3]
-            end
-        end
-    end
-    xl = abs(xl)
-    yl = abs(yl)
-    zl = abs(zl)
-    for (i, mol) in enumerate(rm)
-        rm[i] = mol .+ [xl, yl, zl]
-    end
-    for (i, part) in enumerate(ra)
-        ra[i] = part .+ [xl, yl, zl]
-        qq_r[i] = part .+ [xl, yl, zl]
-    end
-else
-    rm = [SVector{3,Float64}(rand(), rand(), rand()) .* box for i = 1:nMol]
 end
 
 ###########################
@@ -308,17 +222,6 @@ ewald = EWALD(
 ewald = PrepareEwaldVariables(ewald, box) # better one # cfac, kxyz,
 #kfacs, ewald = SetupKVecs(ewald, box)
 println("Set up initial Ewald k-vectors")
-
-if occursin(lowercase(initialConfiguration), "cnf")
-    ϵ = σ = ones(1, 1)
-else
-    #=
-    ϵ = [ϵ_O, ϵ_H]
-    σ = [σ_O, σ_H]
-    molNames = ["Wat" for i = 1:length(rm)]
-    molTypes = [1 for i = 1:length(rm)]
-    =#
-end
 
 if occursin(lowercase(initialConfiguration), "cnf") ||
    occursin(lowercase(initialConfiguration), "crystal")
@@ -363,13 +266,14 @@ end
 @assert isapprox(sum(soa.charge[:]),0.0,atol=0.00001)
 
 #PrintPDB(ra, box, 0, "pdbOutput_molecular")
-total = Properties(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
+total = Properties(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
 
 # set up struct with general system properties like T and move acceptance
 totProps = Properties2(
     temperature,
     ρ,
-    Pressure(total, ρ, temperature, box^3),
+    #Pressure(total, ρ, temperature, box^3),
+    Pressure(total, numbers.molecules, box^3, temperature),
     dr_max,
     dϕ_max,
     0.3,
@@ -393,7 +297,7 @@ LJ, reall, recipEnergy = 0.0, 0.0, 0.0
 if coulombStyle == "bare"
     total, LJ, reall = potential(
         system,
-        Properties(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
+        Properties(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
         ewald,
         qq_q,
         qq_r,
@@ -403,7 +307,7 @@ elseif Wolf
     total = potential(
                     moa,
                     soa,
-                    Properties(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),#triggers wolf summations using double strings
+                    Properties(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),#triggers wolf summations using double strings
                     ewald,
                     vdwTable,
                     totProps,
@@ -412,7 +316,7 @@ elseif Wolf
 else
     total  = potential(moa,
                         soa,
-                        Properties(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
+                        Properties(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
                         ewald,
                         vdwTable,
                         totProps,
@@ -423,6 +327,7 @@ initial = total.energy
 averages = Properties(
     total.energy,
     total.virial,
+    0.0, 0.0, 0.0, 0.0, 0.0,
     0.0,
     0.0,
     0.0,
@@ -432,7 +337,7 @@ averages = Properties(
 totProps = Properties2(
     temperature,
     ρ,
-    Pressure(total, ρ, temperature, box^3),
+    Pressure(total, numbers.molecules, box^3, temperature), #Pressure(total, ρ, temperature, box^3),
     dr_max,
     dϕ_max,
     0.3,
@@ -679,7 +584,7 @@ function Loop(
             rot_moves.d_max,
             total.energy / numbers.molecules,
             ovr_count,
-            4.60453 + total.virial / box / box / box
+            Pressure(total, numbers.molecules, box^3, temperature)
         )
         println(line)
     end # blk to nblock
@@ -709,19 +614,7 @@ Loop(
     db
 )
 PrintPDB(soa,moa, topology.box, 100, "final")
-#=
-PrintOutput(
-    system,
-    totProps,
-    atomType,
-    atomName,
-    qq_r,
-    qq_q,
-    box,
-    1,
-    "xyz_quat_final",
-)
-=#
+
 finish = Dates.now()
 difference = finish - start
 
@@ -736,30 +629,6 @@ println(
 
 Completion(code_version)
 
-#=
-println(
-    blk,
-    " Energy: ",
-    averages.energy / totProps.totalStepsTaken / nMol,
-    " Ratio: ",
-    totProps.numTranAccepted / totProps.totalStepsTaken,
-    " Pressure: ",
-    ρ * temperature + averages.virial / box^3 / totProps.totalStepsTaken, #  Pressure(total, ρ, temperature, box^3),
-    " Pcut: ",
-    pressure_lrc(ρ, system.r_cut),
-    " Ecorr: ",
-    potential_lrc(ρ, r_cut),
-    "p delta: ",
-    pressure_delta(ρ, system.r_cut),
-    " A & T p_c: ",
-    ρ * temperature +
-    averages.virial / box^3 / totProps.totalStepsTaken +
-    pressure_delta(ρ, system.r_cut),
-    " instant energy: ",
-    total.energy / nMol,
-    " instant pressure: ",
-    Pressure(total, ρ, temperature, box^3) +
-    pressure_delta(ρ, system.r_cut),
-    " overlap count: ", ovr_count
-)
-=#
+for item in warnings
+    println(item)
+end

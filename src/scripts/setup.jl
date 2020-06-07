@@ -102,7 +102,6 @@ It will not read #includes for information about FF's.
 =#
     # Read forcefield and topology file
     #ffParameters = FFParameters()
-    println("BUSTED")
     local system, defaults # these are temporary objects (structs) for this function
     atomtypes = []
     moleculetypes = []                  # 1 object for each molecule type

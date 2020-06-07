@@ -1,6 +1,8 @@
 #####
 #
-#            Hodgepodge of stuff
+#            Hodgepodge of functions  - should be NO STRUCTS HERE BRADEN.
+#                    BRADEN - THERE SHOULD BE ZERO STRUCTS HERE.
+#                     BRADEN YOU BETTER DAMN WELL BE LISTENING!
 #
 ##########
 using StaticArrays
@@ -19,77 +21,6 @@ function potential_lrc(ρ, r_cut)
     sr3 = 1.0 / r_cut^3
     return π * ((8.0 / 9.0) * sr3^3 - (8.0 / 3.0) * sr3) * ρ
 end
-
-function pressure_lrc(ρ, r_cut)
-    """Calculates long-range correction for Lennard-Jones pressure."""
-    # density, r_cut, and the results, are in LJ units where sigma = 1, epsilon = 1
-    sr3 = 1.0 / r_cut^3
-    return π * ((32.0 / 9.0) * sr3^3 - (16.0 / 3.0) * sr3) * ρ^2
-end
-
-function pressure_delta(ρ, r_cut)
-    """Calculates correction for Lennard-Jones pressure due to discontinuity in the potential at r_cut."""
-    # density, r_cut, and the results, are in LJ units where sigma = 1, epsilon = 1
-    sr3 = 1.0 / r_cut^3
-    return π * (8.0 / 3.0) * (sr3^3 - sr3) * ρ^2
-end
-
-mutable struct Properties
-    energy::Float64
-    virial::Float64
-    coulomb::Float64
-    recip::Float64
-    recipOld::Float64
-    old_e::Float64
-    old_v::Float64
-end
-
-"""Struct for tracking and optimizing translation moves"""
-mutable struct Moves
-    naccepp::Int           # previous number of attempts
-    naccept::Int           # current number of attempts
-    attempp::Int
-    attempt::Int
-    set_value::Float64     # desired success rate
-    d_max::Float64
-end
-
-"""structure for energy calculation properties """
-
-mutable struct Requirements
-    rm::Vector{SVector{3,Float64}}
-    ra::Vector{SVector{3,Float64}}
-    nMols::Int
-    nAtoms::Int
-    nCharges::Int
-    thisMol_theseAtoms::Vector{SVector{2,Int64}}
-    molNames::Vector     # strings
-    molTypes::Vector     # integers
-    atomNames::Vector    # strings
-    atomTypes::Vector    # integers
-    #ϵ::Array{Float64,2}
-    #σ::Array{Float64,2}
-    table::Tables
-    box::Float64
-    r_cut::Float64
-end
-
-""" structure for generic simulation properties"""
-mutable struct Properties2
-    temperature::Float64
-    ρ::Float64
-    pressure::Float64
-    dr_max::Float64
-    dϕ_max::Float64
-    move_accept::Float64
-    numTranAccepted::Int
-    totalStepsTaken::Int
-    quat::Vector{SVector{4,Float64}}
-    LJ_rcut::Float64
-    qq_rcut::Float64
-    box::Float64
-end
-
 
 function random_translate_vector(dr_max::Float64, old::SVector, box::Float64)
 
@@ -111,15 +42,6 @@ function Metropolis(delta)
     else
         return false
     end
-end
-""" Calculates pressure including the tail correction"""
-function Pressure(vir, ρ, T, vol, r_cut)
-    return ρ * T + vir.virial / vol + pressure_lrc(ρ, r_cut)
-end
-
-"""Calculates pressure without tail correction"""
-function Pressure(vir, ρ, T, vol)
-    return ρ * T + vir.virial / vol
 end
 
 #test_LJ()

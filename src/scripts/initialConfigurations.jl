@@ -351,5 +351,9 @@ function ReadNIST(filename)
 
     qq_q = [charge[i] for i in eachindex(charge)]
     qq_r = [SVector{3,Float64}(QQcoords[i]...) for i = 1:length(QQcoords)] #Vector{SVector{3,Float64}}(undef,length(QQcoords))
+
+
+    println(box1)
+
     return qq_r, qq_q, rm, qq_r, atomTracker, box1, atomName, atomType
 end # function
