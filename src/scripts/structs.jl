@@ -307,9 +307,13 @@ function BodyFixed(m,systemTop)
     natoms = length(m.r)             # number of atoms in molecule
     mass = []
     atype= []
+    println(m)
     for i=1:natoms
+        # given string return which molecule # this is out of all molecule types
         mol = FindMolType(String(m.resnm[i]),moleculeList )  # sort of rhetorical
+        # given string atom name, and Int64 numerical mol #, return Int64 atom
         atom = FindAtomInMol( String(m.atomnm[i]),mol )
+        # given the molecule type, which atom type, by # is this
         atomTypeNumber = FindNumericAtomType(mol,atom,systemTop)
         push!(mass, systemTop.molParams[mol].atoms[atom].mass)
         push!(atype,atomTypeNumber)

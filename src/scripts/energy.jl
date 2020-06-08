@@ -347,17 +347,16 @@ function potential(
     r_cut = sim_props.LJ_rcut
     #@assert r_cut == 10.0
     box = sim_props.box
-    total.energy = 0.0
-    total.virial = 0.0
+    tot.energy = 0.0
+    tot.virial = 0.0
     #########
     #
     #     Calculate LJ
     #
     ##################
     LJ, real = 0.0, 0.0
-
     #ener, vir = LJ_poly_ΔU(2, system) # turn on for timing
-
+    println("tot_vir is $(tot.virial) remainder is $(tot.lj_virial)")
     for i = 1:length(moa.COM)
         ener, vir = LJ_poly_ΔU(i, moa, soa, vdwTable, r_cut, box)
         tot.energy += ener
@@ -366,10 +365,10 @@ function potential(
     end
     tot.energy = tot.energy / 2
     tot.virial = tot.virial / 2
-    tot.lj_virial = tot.virial / 2
+    tot.lj_virial = tot.virial
     LJ = LJ / 2
     println("Total LJ energy is: ", tot.energy)
-
+    println("LJ tot_vir is $(tot.virial) remainder is $(tot.lj_virial)")
     #########
     #
     #     Calculate EWALD
@@ -395,7 +394,7 @@ function potential(
     tot.real_virial = totReal / 3.0
     reall = totReal
     println("Coulomb contribution is: ", reall)
-
+    println("real tot_vir is $(tot.virial) remainder is $(tot.lj_virial + tot.real_virial)")
     recipEnergy, ewalds = RecipLong(ewalds, soa.coords, soa.charge, box)  #RecipLong(system, ewald, qq_r, qq_q, kfacs)
     recipEnergy *= ewalds.factor
 
@@ -405,7 +404,7 @@ function potential(
     tot.coulomb += recipEnergy
     tot.virial += recipEnergy / 3.0
     tot.recip_virial = recipEnergy / 3.0
-
+    println("recip tot_vir is $(tot.virial) remainder is $(tot.lj_virial + tot.real_virial+tot.recip_virial)")
     selfEnergy = EwaldSelf(ewalds, soa.charge)
     println("Self energy: ", selfEnergy)
     tot.energy += selfEnergy

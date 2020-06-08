@@ -10,9 +10,10 @@
 [ atomtypes ]
 ; name   mass      charge     ptype  sigma(nm)     epsilon(kJ/mol)
 ; tip3p atoms
-O1        O1    15.99940   -0.8340      A   0.315061     0.6364000
-H         H     1.008000   0.4170       A   0.0000       0.0000000
-
+;O1        O1    15.99940   -0.8340      A   0.315061     0.6364000 ; tip3p
+;H         H     1.008000   0.4170       A   0.0000       0.0000000 ; tip3p
+O1        O1     15.99940   -0.8476      A   0.3166       0.6500000 ; spc/e
+H         H      1.008000   0.4238       A   0.0000       0.0000000 ; spc/e
 ; MEA Atoms
 oh       oh   0.0000  0.0000  A   3.06647e-01  8.80314e-01
 h1       h1   0.0000  0.0000  A   0.00000e+00  0.00000e+00
@@ -157,16 +158,23 @@ MEA_DUMMY  3
 ; molname	nrexcl
 SOL	3
 
+;[ atoms ]
+;;   nr   type  resnr residue  atom   cgnr     charge       mass
+;     1  O1   1    SOL      O1      1      -0.8340		15.99940
+;     2  H    1    SOL      H8      1       0.4170		1.0080
+;     3  H    1    SOL      H9      1       0.4170		1.0080
+
 [ atoms ]
 ;   nr   type  resnr residue  atom   cgnr     charge       mass
-     1  O1   1    SOL      O1      1      -0.8340		15.99940
-     2  H    1    SOL      H8      1       0.4170		1.0080
-     3  H    1    SOL      H9      1       0.4170		1.0080
+      1  O1   1    SOL      O1      1      -0.8476		15.99940
+      2  H    1    SOL      H8      1       0.4238		1.0080
+      3  H    1    SOL      H9      1       0.4238		1.0080
 
 #ifndef FLEXIBLE
 [ settles ]
 ; i	j	funct	length
-1	1	0.09572	0.15139
+;1	1	0.09572	0.15139  ; tip3p
+ 1  1   0.10000 0.16330  ; spc/e
 
 [ exclusions ]
 1	2	3

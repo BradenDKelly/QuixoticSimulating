@@ -7,11 +7,11 @@
 ; nbfunc        comb-rule       gen-pairs       fudgeLJ fudgeQQ
   1             2               yes             0.5       0.8333
 
-[ atomtypes ]
-; name   mass      charge     ptype  sigma(nm)     epsilon(kJ/mol)
-; tip3p atoms
-O1        O1    15.99940   -0.8340      A   0.315061     0.6364000
-H         H     1.008000   0.4170       A   0.0000       0.0000000
+  [ atomtypes ]
+  ; name   mass      charge     ptype  sigma(nm)     epsilon(kJ/mol)
+  ; tip3p atoms
+  O1        O1     15.99940   -0.8476      A   0.3166       0.6500000 ; spc/e
+  H         H      1.008000   0.4238       A   0.0000       0.0000000 ; spc/e
 
 ;=====================================================================
 ; 							WATER tip3p
@@ -22,14 +22,14 @@ WAT	3
 
 [ atoms ]
 ;   nr   type  resnr residue  atom   cgnr     charge       mass
-     1  O1   1    WAT      OW      1      -0.8340		15.99940
-     2  H    1    WAT      HW      1       0.4170		1.0080
-     3  H    1    WAT      HW      1       0.4170		1.0080
+      1  O1   1    WAT      OW      1      -0.8476		15.99940
+      2  H    1    WAT      HW      1       0.4238		1.0080
+      3  H    1    WAT      HW      1       0.4238		1.0080
 
 #ifndef FLEXIBLE
 [ settles ]
 ; i	j	funct	length
-1	1	0.09572	0.15139
+ 1  1   0.10000 0.16330  ; spc/e
 
 [ exclusions ]
 1	2	3

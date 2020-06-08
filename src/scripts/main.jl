@@ -64,7 +64,8 @@ println(Dates.now())
 ################################################################################
 temperature = 298.15 #0.6 #0.8772  # 1.2996
 ρ = 0.033101144   #0.015047707 #0.003633451 #0.00375000533 0.015047712
-
+ρ = 0.03333 # molec/Å³
+# 33.33 nm³ = 0.03333 Å³ Humphrey got pressure = 37 MPa ± 6 for spce https://arxiv.org/pdf/physics/9806038.pdf
 nMol = 1000 #256 #100 * 10
 nAtoms = nMol * 3
 r_cut = 10.0 #2.5  # box / 2 Angstrom
