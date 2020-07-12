@@ -43,10 +43,34 @@ end
 ##########################!!!!!!                !!!!!!##########################
 #                           --------------------------
 function PrepareEwaldVariables(ewald::EWALD, boxSize::Real where {T})
+    """Calculate ewald summation prefactors.
+
+    --------------
+    Parameters
+    --------------
+    ewald :: Struct :: EWALD
+        ewald.kappa :: Float
+            exponential decay parameter in coulomb summation methods
+        ewald.nk :: Int
+            number of wave vectors
+        ewald.k_sq_max :: Int
+            maximum squared wave vectors
+        ewald.factor :: Float
+            unit conversion factor for coulomb energy. Converts to (K)
+    boxSize :: Float
+        simulation box length. Assumes cubic box.
+
+    --------------
+    Returns
+    --------------
+    ewald :: Struct :: EWALD
+        ewald.factor
+            calculates the ewald.factor and saves it in the EWALD struct
+    """
     kappa = ewald.kappa
     nk = ewald.nk
     k_sq_max = ewald.k_sq_max
-    @assert k_sq_max == 27
+    #@assert k_sq_max == 27
     fact = ewald.factor
     box = min(boxSize...)
     b = 1.0 / 4.0 / kappa / kappa / box / box # kappa already divided by box, this undoes that...
@@ -114,6 +138,30 @@ end
 """Secondary Preparation for EWALD Summation"""
 #function SetupKVecs(nk, kappa, boxSize)
 function SetupKVecs(ewald::EWALD, boxSize::Real where {T})
+    """Calculate ewald summation prefactors.
+
+    --------------
+    Parameters
+    --------------
+    ewald :: Struct :: EWALD
+        ewald.kappa :: Float
+            exponential decay parameter in coulomb summation methods
+        ewald.nk :: Int
+            number of wave vectors
+        ewald.k_sq_max :: Int
+            maximum squared wave vectors
+        ewald.factor :: Float
+            unit conversion factor for coulomb energy. Converts to (K)
+    boxSize :: Float
+        simulation box length. Assumes cubic box.
+
+    --------------
+    Returns
+    --------------
+    ewald :: Struct :: EWALD
+        ewald.factor
+            calculates the ewald.factor and saves it in the EWALD struct
+    """
 
     kappa = ewald.kappa
     nk = ewald.nk
@@ -157,6 +205,39 @@ function EwaldReal(
     chosenOne::Int64,
     system::Requirements,
 )
+
+"""Calculates coulombic "real" potential energy single molecule
+   interacting with system
+
+    --------------
+    Parameters
+    --------------
+    qq_r :
+        vector of charge coordinates
+    qq_q :
+        vector of charge magnitudes
+    kappa :
+        exponential decay parameter for summation methods
+    box :
+        simulation box length
+    thisMol_thisAtom :
+        book-keeping array. For each molecule holds index of starting and end atoms
+    chosenOne :
+        index of the molecule which is interacting with the system.
+    system : Struct :: Requirements
+        system.rm :: Vector{SVector{3}}
+            vector of molecular coordinates
+        system.r_cut : Float
+            cutoff distance for coulombic interactions
+    --------------
+    Returns
+    --------------
+    pot : Float
+        real coulombic contribution to the potential energy of molecule
+        interacting with system
+    overlap : boolian
+        Flag for if charges were too close.
+"""
     ####
     #
     #    Some prep stuff
@@ -236,13 +317,48 @@ end
 
 ##########################################
 
-function EwaldReal(chosenOne::Int64,
-                    moa::StructArray,
-                    soa::StructArray,
-                    ewald::EWALD,
-                    r_cut::Float64,
-                    box::Float64
-    )
+function EwaldReal(
+    chosenOne::Int64,
+    moa::StructArray,
+    soa::StructArray,
+    ewald::EWALD,
+    r_cut::Float64,
+    box::Float64,
+)
+"""Calculates coulombic "real" potential energy single molecule
+   interacting with system
+
+    --------------
+    Parameters
+    --------------
+    chosenOne : Int
+        index of molecule interacting with rest of system.
+    moa : StructArray :: Requirements
+        moa.COM :: Vector{SVector{3}}
+            cartesian coordinates of molecular centers of mass
+        moa.firstAtom :: Int
+            index for first atom in given molecule
+        moa.lastAtom :: Int
+            index for last atom in given molecule
+    soa : StructArary :: Requirements
+        soa.coords :: Vector{SVector{3}}
+            cartesian coordinates of atom(charge) centers
+    ewald : Struct
+        ewald.kappa :: Float
+            exponential decay parameter for summation methods
+    box :
+        simulation box length
+    r_cut : Float
+        coulomb interaction cutoff distance
+    --------------
+    Returns
+    --------------
+    pot : Float
+        real coulombic contribution to the potential energy of molecule
+        interacting with system
+    overlap : boolian
+        Flag for if charges were too close.
+"""
     ####
     #
     #    Some prep stuff
@@ -310,7 +426,9 @@ function EwaldReal(chosenOne::Int64,
                         # TODO remove this if statement
                         rab_mag = sqrt(rab2)
                         pot +=
-                            soa.charge[a] * soa.charge[b] * erfc(kappa * rab_mag) / rab_mag
+                            soa.charge[a] *
+                            soa.charge[b] *
+                            erfc(kappa * rab_mag) / rab_mag
                     else
                         pot += 0.0
                     end # potential cutoff
@@ -328,9 +446,29 @@ function RecipLong(
     ewald::EWALD,
     r::Vector{SVector{3,Float64}},
     qq_q::Vector{Float64},
-    box::Float64
+    box::Float64,
 )
-""" Recipricol used with moa and soa"""
+    """ Recipricol used with moa and soa
+    ---------------
+    FFParameters
+    ---------------
+    ewald : Struct
+        kappa::Float64
+            exponential decay parameter for summation methods
+        nk::I
+            number of wave vectors
+        k_sq_max::I
+            maximum number of squared number of wavenumbers
+        NKVECS::I
+        kxyz::Vector{SVector{3,Int32}}
+        cfac::Vector{Float64}
+        sumQExpOld::Vector{ComplexF64}
+            old summation saved for speed
+        sumQExpNew::Vector{ComplexF64}
+            new summation saved for speed
+        factor::Float64
+            unit conversion to coulombic energy of (K)
+    """
 
     kxyz = ewald.kxyz[:]
     energy = 0.0
@@ -421,7 +559,6 @@ function RecipMove(
 
     eikx_n = OffsetArray{Complex{Float64}}(undef, 1:n, 0:nk) #SArray{n,nk+2}([0.0 + 0.0*im for i=1:n for j=1:(nk+2) ]...)   #undef,n,nk+2)
     eiky_n = OffsetArray{Complex{Float64}}(undef, 1:n, -nk:nk) #zeros(ComplexF64,n,2*nk+2) #SArray{n,2*nk+2}([0.0 + 0.0*im for i=1:n for j=1:(2*nk+2) ]...)  #(undef,n,2*nk+2)
-
     eikz_n = OffsetArray{Complex{Float64}}(undef, 1:n, -nk:nk) #similar(eiky_n) #  OffsetArray{Complex{Float64}}(undef, 1:n, -nk:nk)
     eikx_o = OffsetArray{Complex{Float64}}(undef, 1:n, 0:nk) #similar(eikx_n) #  OffsetArray{Complex{Float64}}(undef, 1:n, 0:nk) #SArray{n,nk+2}([0.0 + 0.0*im for i=1:n for j=1:(nk+2) ]...)   #undef,n,nk+2)
     eiky_o = OffsetArray{Complex{Float64}}(undef, 1:n, -nk:nk) #similar(eiky_n) # OffsetArray{Complex{Float64}}(undef, 1:n, -nk:nk) #zeros(ComplexF64,n,2*nk+2) #SArray{n,2*nk+2}([0.0 + 0.0*im for i=1:n for j=1:(2*nk+2) ]...)  #(undef,n,2*nk+2)
@@ -510,18 +647,44 @@ function EwaldSelf(ewald::EWALD, qq_q::Vector)
 end
 
 function EwaldIntra(ewald::EWALD, soa::StructArray, moa::StructArray)
+    """Intramolecular contribution to coulomb potential energy for system.
+
+    --------------
+    Parameters
+    --------------
+    moa : StructArray :: Requirements
+        moa.firstAtom :: Int
+            index for first atom in given molecule
+        moa.lastAtom :: Int
+            index for last atom in given molecule
+    soa : StructArary :: Requirements
+        soa.coords :: Vector{SVector{3}}
+            cartesian coordinates of atom(charge) centers
+        soa.charge :: Vector{Float}
+            partial charges
+    ewald : Struct
+        ewald.kappa :: Float
+            exponential decay parameter for summation methods
+        ewald.factor :: Float
+            Unit conversions so coulomb potential energy is (K)
+    --------------
+    Returns
+    --------------
+    potential energy of system for intramolecular contributions
+    """
 
     kappa = ewald.kappa
     factor = ewald.factor
     qq_intra = 0.0
     rᵢⱼ = SVector{3}(0.0, 0.0, 0.0)
-    for (itr,mol) in enumerate(moa)
+    for (itr, mol) in enumerate(moa)
         for i = moa[itr].firstAtom:moa[itr].lastAtom-1
             ri = soa.coords[i]
-            for j = i + 1:moa[itr].lastAtom
+            for j = i+1:moa[itr].lastAtom
                 rj = soa.coords[j]
                 rij = norm(rj - ri)
-                qq_intra += soa.charge[i] * soa.charge[j] * erf(kappa*rij) / rij
+                qq_intra +=
+                    soa.charge[i] * soa.charge[j] * erf(kappa * rij) / rij
             end
         end
     end
@@ -535,7 +698,7 @@ function TinfoilBoundary(
     qq_q::Vector,
     qq_r::Vector,
 )
-"assumes eps of the reaction field around the lattices = 1"
+    "assumes eps of the reaction field around the lattices = 1"
     vol = system.box^3
     return 2 * π / 3 / vol * dot(qq_q .* qq_r, qq_q .* qq_r)
 end
@@ -554,7 +717,7 @@ function EwaldShort(
     partial_v = 0.0
     overlap = false
     # Calculate new ewald REAL energy
-    realEwald, overlap = EwaldReal(i, moa, soa, ewald,sim_props.qq_rcut, box)
+    realEwald, overlap = EwaldReal(i, moa, soa, ewald, sim_props.qq_rcut, box)
     realEwald *= ewald.factor
     partial_e += realEwald
     partial_v += (realEwald / 3)

@@ -23,10 +23,17 @@ function potential_lrc(ρ, r_cut)
 end
 
 function random_translate_vector(dr_max::Float64, old::SVector, box::Float64)
+    """Return a randomly translated vector for a translation move type.
 
-    # In: dr_max, old
-    # Out: SVector{3,Float64}
-
+    --------------
+    Parameters
+    In:
+        dr_max :: Float,
+            maximum displacement
+        old :: SVector{3}
+            old vector which will be modified
+    Out: SVector{3,Float64}
+    """
     zeta = rand(Float64, 3)    # Three uniform random numbers in range (0,1)
     zeta = zeta .- 0.5         #! Now in range (-1,+1)
     return PBC(old + zeta .* dr_max, box) #! Move to new position
@@ -102,7 +109,7 @@ end #Center_of_Mass
 
 #!============================================================================================================
 function Shift_COM_to_Zero!( atm_coords,COM )
-
+"""Shift the center of mass of a body fixed molecule to be at (0, 0, 0)
 #!============================================================================================================
 
 # real, dimension(3), intent(in)                         			:: COM
@@ -113,7 +120,7 @@ function Shift_COM_to_Zero!( atm_coords,COM )
 
 #! This is meant to take the body fixed coordinates of the atoms for a molecule and shift them so that the center of mass is at zero. This is necessary for proper rotation of the molecule.
 #! This should only be called at the start of the run after getting *.pdb file coordinates.
-
+"""
 for i = 1:length(atm_coords)
 
     atm_coords[i] = SVector(atm_coords[i] .- COM[:])

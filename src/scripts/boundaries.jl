@@ -14,6 +14,7 @@
 end
 
 function PBC(in::SVector{3,Float64}, box::Real)
+    """Calculates periodic boundary conditions."""
     x, y, z = in[1], in[2], in[3]
     if x > box x -= box end
     if x < 0 x += box end

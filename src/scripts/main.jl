@@ -39,6 +39,7 @@ start = Dates.now()
 println(Dates.now())
 
 ################################################################################
+# TODO (BDK) NEED UNIT TESTS REALLY BAD.
 # TODO (BDK) Add in setup.jl and structs.jl (done ✔)
 # TODO (BDK) implement orientational bias -> useful for solutes
 # TODO (BDK) Make initial configuration generation w/ Topology struct (done ✔)

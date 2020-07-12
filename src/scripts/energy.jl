@@ -14,10 +14,12 @@ include("ewalds.jl")
 """polyatomic LJ with mos and soa"""
 function LJ_poly_ΔU(i, moa::StructArray, soa::StructArray,
                             vdwTable, r_cut, box)
+    """
     # Calculates Lennard-Jones energy of 1 particle, "i", interacting with the
     # other N-1 particles in the system
     # input:  i, Requirements (A struct with ϵ, σ, r_cut,, box and r)    #
     # output  energy, virial both scalars
+    """
 
     ri = moa.COM[i]   # molecule i
     rMol = moa.COM    # all molecules
@@ -146,14 +148,13 @@ function LennardJones(rij)
     return 4 * 1 * ((1 / rij)^12 - (1 / rij)^6)
 end
 
-# ================================================================================================================================
-function press_corr(system::Requirements, num_atom_types = 2, b = [100, 200])
-    # ================================================================================================================================
 
-    # Adds lennard-jones or Buckingham (EXP-6) tail correction to pressure
-    # ======================================================================================================
-    #                 Correction to Each atom type
-    # ======================================================================================================
+function press_corr(system::Requirements, num_atom_types = 2, b = [100, 200])
+"""Calculates the correction to pressure due to cutoff.
+
+     Adds lennard-jones or Buckingham (EXP-6) tail correction to pressure
+                     Correction to Each atom type
+"""
 
     corp = 0.0
     corpi = 0.0
@@ -202,9 +203,9 @@ function press_corr(system::Requirements, num_atom_types = 2, b = [100, 200])
     #end
 end #Subroutine press_corr
 
-# ================================================================================================================================
+
 function ener_corr(system::Requirements, num_atom_types = 2, b = [100, 200])
-    # ================================================================================================================================
+"""Calculates the correction to energy due to using cutoffs.
 
     # -Adds lennard-jones or EXP-6 tail correction to potential energy.
     # -Works for polyatomic molecules. Calculates total potential for a pure
@@ -215,7 +216,7 @@ function ener_corr(system::Requirements, num_atom_types = 2, b = [100, 200])
     #         Written by Braden Kelly a.k.a. Zarathustra sometime
     #                  prior to your reading this.
     # ============================================================
-
+"""
     coru = 0.0
     Rc = system.r_cut
     vol = system.box^3
@@ -249,7 +250,7 @@ function ener_corr(system::Requirements, num_atom_types = 2, b = [100, 200])
 
 end #Subroutine ener_corr
 
-"""Calculate total potential energy using moa and soa for WolfSummation"""
+
 function potential(
     moa::StructArray,
     soa::StructArray,
@@ -258,7 +259,39 @@ function potential(
     vdwTable::Tables,
     sim_props::Properties2#triggers wolf summations using double strings
 )
+"""Calculate total potential energy using moa and soa for WolfSummation.
 
+    -------------
+    Parameters
+    moa :: StructArray :: Requirements
+        moa.COM :: Vector{SVector{3}} :: Floats
+            array of coordinates of each molecules center of mass
+    soa :: StructArray :: Requirements
+        soa.rm :: Vector{SVector{3}} :: Floats
+            array of coordinates of each atom
+        soa.charge :: Vector{Float}
+            array of partial charges
+    total :: Struct :: Properties
+        total.energy :: Float
+            total energy of system
+        total.virial :: Float
+            total virial of system
+        total.coulomb :: Float
+            total coulombic energy of system
+    ewald :: Struct :: EWALD
+        ewald.kappa :: Float
+            exponential damping parameters used in coulomb summations
+        ewald.factor :: Float
+            ewald unit conversion factor
+    sim_props :: Struct :: Properties2
+        sim_props.box :: Float
+            Simulation box length. Assumes cubic.
+    vdw_table :: Struct :: Tables
+        vdw_table.ϵ :: Matrix
+            Contains all vdw ϵ parameters(mixing rules applied)
+        vdw_table.σ :: Matrix
+            Contains all vdw σ parameters(mixing rules applied)
+"""
     #tot = Properties(0.0,0.0)
     ener, vir = 0.0, 0.0
     r_cut = sim_props.LJ_rcut
@@ -341,7 +374,46 @@ function potential(
     sim_props::Properties2,
     coulomb_style::String #triggers wolf summations using double strings
 )
+"""Calculate total potential energy using moa and soa for Ewald Summation.
 
+    -------------
+    Parameters In
+    -------------
+    moa :: StructArray :: Requirements
+        moa.COM :: Vector{SVector{3}} :: Floats
+            array of coordinates of each molecules center of mass
+    soa :: StructArray :: Requirements
+        soa.rm :: Vector{SVector{3}} :: Floats
+            array of coordinates of each atom
+        soa.charge :: Vector{Float}
+            array of partial charges
+    total :: Struct :: Properties
+        total.energy :: Float
+            total energy of system
+        total.virial :: Float
+            total virial of system
+        total.coulomb :: Float
+            total coulombic energy of system
+    ewald :: Struct :: EWALD
+        ewald.kappa :: Float
+            exponential damping parameters used in coulomb summations
+        ewald.factor :: Float
+            ewald unit conversion factor
+    sim_props :: Struct :: Properties2
+        sim_props.box :: Float
+            Simulation box length. Assumes cubic.
+    vdw_table :: Struct :: Tables
+        vdw_table.ϵ :: Matrix
+            Contains all vdw ϵ parameters(mixing rules applied)
+        vdw_table.σ :: Matrix
+            Contains all vdw σ parameters(mixing rules applied)
+
+    -------------
+    Values Out
+    -------------
+    Out : float
+        potential energy of the entire system
+"""
     #tot = Properties(0.0,0.0)
     ener, vir = 0.0, 0.0
     r_cut = sim_props.LJ_rcut
